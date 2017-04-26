@@ -6,9 +6,13 @@ variables:
   
 build:linux:amd64:
   stage: build
+  before_script:
+    - apt-get -yqq update
+    - apt-get -yqq install python3 ninja-build python3-pip
+    - pip3 install meson
   script:
-    - PREFIX=$(pwd)/.local make -k all
-    - PREFIX=$(pwd)/.local make install
+    - meson -Dprefix=$(pwd)/.local build
+    - cd build && ninja install
   artifacts:
     untracked: true
   tags:
@@ -18,8 +22,12 @@ build:linux:amd64:
 
 test:linux:amd64:
   stage: test
+  before_script:
+    - apt-get -yqq update
+    - apt-get -yqq install python3 ninja-build python3-pip
+    - pip3 install meson
   script:
-    - PREFIX=$(pwd)/.local make -k check
+    - cd build && ninja test
   dependencies:
     - build:linux:amd64
   tags:
@@ -34,6 +42,8 @@ deckard:linux:amd64:
     - PREFIX=$(pwd)/.local MAKEFLAGS="--jobs $(nproc) --keep-going" make check-integration
   dependencies:
     - build:linux:amd64
+  except:
+    - meson-build
   tags:
     - docker
     - linux
@@ -57,6 +67,8 @@ respdiff:linux:amd64:
     - docker
     - linux
     - amd64
+  except:
+    - meson-build
   allow_failure: true
 
 #arm_build:

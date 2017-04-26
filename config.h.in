@@ -1,0 +1,9 @@
+#ifndef _GNU_SOURCE
+#mesondefine _GNU_SOURCE
+#endif
+#mesondefine PACKAGE_VERSION
+#mesondefine MODULEDIR
+#mesondefine libknot_SONAME
+#mesondefine libdnssec_SONAME
+#mesondefine libzscanner_SONAME
+#mesondefine HAS_SYSTEMD

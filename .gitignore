@@ -63,3 +63,4 @@ libkres.amalg.c
 /libkres.pc
 /modules/version/version.lua
 /tags
+/build

@@ -757,7 +757,7 @@ static int engine_loadconf(struct engine *engine, const char *config_path)
 	int ret = 0;
 	/* Init environment */
 	static const char sandbox_bytecode[] = {
-		#include "daemon/lua/sandbox.inc"
+		#include "sandbox.inc"
 	};
 	if (l_dobytecode(engine->L, sandbox_bytecode, sizeof(sandbox_bytecode), "init") != 0) {
 		fprintf(stderr, "[system] error %s\n", lua_tostring(engine->L, -1));
@@ -774,7 +774,7 @@ static int engine_loadconf(struct engine *engine, const char *config_path)
 	if (ret == 0) {
 		/* Load defaults */
 		static const char config_bytecode[] = {
-			#include "daemon/lua/config.inc"
+			#include "config.inc"
 		};
 		ret = l_dobytecode(engine->L, config_bytecode, sizeof(config_bytecode), "config");
 	}

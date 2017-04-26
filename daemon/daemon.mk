@@ -14,7 +14,7 @@ kresd_DIST := daemon/lua/kres.lua daemon/lua/kres-gen.lua \
 
 # Embedded resources
 %.inc: %.lua
-	@$(call quiet,XXD_LUA,$<) $< > $@
+	@$(call quiet,XXD_LUA,$<) $< $@
 ifeq ($(AMALG), yes)
 kresd.amalg.c: daemon/lua/sandbox.inc daemon/lua/config.inc
 else
