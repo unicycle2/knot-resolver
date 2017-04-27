@@ -1,7 +1,7 @@
 # Knot Resolver
 project('knot-resolver', 'c',
 	version : '1.3.0-dev',
-	meson_version : '>0.28.0',
+	meson_version : '>0.37.0',
 	license : 'GPL3+')
 
 # Project variables
