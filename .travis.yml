@@ -38,7 +38,7 @@ before_script:
   - rvm get stable || true
   - cat $(brew --prefix knot)/lib/pkgconfig/libknot.pc | sed -e 's/ -I$(.*//' > ${PKG_CONFIG_PATH}/libknot.pc
 script:
-  - meson --prefix $HOME/.local --werror build
+  - meson --prefix $HOME/.local build
   - ninja -C build install
   - ./build/kresd -h
   - ./build/kresd -V
