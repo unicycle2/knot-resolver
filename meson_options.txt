@@ -1,1 +1,2 @@
 option('moduledir', type : 'string', value : 'knot-resolver', description : 'Modules library subdirectory.')
+option('pkgconfigdir', type : 'string', value : 'pkgconfig', description : 'pkgconfig directory.')

@@ -4,10 +4,14 @@ project('knot-resolver', 'c',
 	meson_version : '>0.28.0',
 	license : 'GPL3+')
 
-add_project_arguments('-std=c99', language : 'c')
-
 # Project variables
 libkres_version = '3.0.0'
+
+# Global compiler settings
+compiler = meson.get_compiler('c')
+add_project_arguments('-std=c99', language : 'c')
+add_project_arguments(['-include', join_paths(meson.current_build_dir(), 'config.h')], language : 'c')
+add_project_arguments('-D_GNU_SOURCE=1', language : 'c')
 
 # Dependencies
 threads_dep     = dependency('threads')
@@ -29,19 +33,17 @@ abs_sysconfdir = join_paths(get_option('prefix'), get_option('sysconfdir'))
 abs_moduledir = join_paths(get_option('prefix'), get_option('libdir'), get_option('moduledir'))
 
 conf_data = configuration_data()
-conf_data.set('PACKAGE_VERSION', '"'+meson.project_version()+'"')
-conf_data.set('abi_version', 3)
-conf_data.set('MODULEDIR', '"' + abs_moduledir + '"')
-conf_data.set('_GNU_SOURCE', 1)
+conf_data.set_quoted('PACKAGE_VERSION', meson.project_version())
+conf_data.set_quoted('MODULEDIR', abs_moduledir)
 
 if libknot_dep.version().version_compare('>= 2.4.0')
-  conf_data.set('libknot_SONAME', '"libknot.so.5"')
-  conf_data.set('libzscanner_SONAME', '"libzscanner.so.1"')
-  conf_data.set('libdnssec_SONAME', '"libdnssec.so.2"')
+  conf_data.set_quoted('libknot_SONAME', 'libknot.so.5')
+  conf_data.set_quoted('libzscanner_SONAME', 'libzscanner.so.1')
+  conf_data.set_quoted('libdnssec_SONAME', 'libdnssec.so.2')
 else
-  conf_data.set('libknot_SONAME', '"libknot.so.4"')
-  conf_data.set('libzscanner_SONAME', '"libzscanner.so.1"')
-  conf_data.set('libdnssec_SONAME', '"libdnssec.so.2"')
+  conf_data.set_quoted('libknot_SONAME', 'libknot.so.4')
+  conf_data.set_quoted('libzscanner_SONAME', 'libzscanner.so.1')
+  conf_data.set_quoted('libdnssec_SONAME', 'libdnssec.so.2')
 endif
 
 if libsystemd_dep.found()
@@ -49,13 +51,11 @@ if libsystemd_dep.found()
 endif
 
 # Attributes checks
-compiler = meson.get_compiler('c')
-
-attributes = ['cold', 'noreturn', 'pure', 'unused', 'nonnull', 'specialsnowflake']
+attributes = ['cold', 'noreturn', 'pure', 'unused', 'nonnull']
 foreach attr : attributes
-  code = 'void func() __attribute__ (('+attr+'));'
-  result = compiler.compiles(code, name : 'has __attribute__ (('+attr+'))')
-  conf_data.set('HAVE_ATTRIBUTE_'+attr.toupper(), result)
+  code = 'void func(void *) __attribute__ (('+attr+'));'
+  result = compiler.compiles(code, args : ['-Wattributes', '-Werror'], name : 'has __attribute__ (('+attr+'))')
+  conf_data.set10('HAVE_ATTRIBUTE_'+attr.to_upper(), result)
 endforeach
 
 configure_file(input : 'config.h.in',
@@ -119,6 +119,25 @@ libkres = library('kres',
 		  dependencies : libkres_deps,
 		  include_directories : incdir,
 		  install : true)
+
+libkres_pc_conf = configuration_data()
+libkres_pc_conf.set('version', meson.project_version())
+libkres_pc_conf.set('prefix', get_option('prefix'))
+libkres_pc_conf.set('libdir', join_paths(get_option('prefix'), get_option('libdir')))
+libkres_pc_conf.set('includedir', join_paths(get_option('prefix'), get_option('includedir')))
+
+configure_file(input : 'lib/libkres.pc.in',
+	       output : 'libkres.pc',
+	       configuration : libkres_pc_conf)
+
+pkg_config = find_program('pkg-config')
+
+custom_target('libkres.pc',
+	      input : 'libkres.pc',
+	      output : 'libkres.pc',
+	      command : [pkg_config, '--validate', '@OUTPUT@'],
+	      install_dir : join_paths(get_option('prefix'), get_option('libdir'), get_option('pkgconfigdir')),
+	      install : true)
 
 # Modules
 

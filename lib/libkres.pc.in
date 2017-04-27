@@ -1,0 +1,11 @@
+prefix=@prefix@
+exec_prefix=${prefix}
+libdir='@libdir@'
+includedir='@includedir@'
+
+Name: libkres
+Description: The Knot DNS Resolver library
+URL: https://www.knot-resolver.cz
+Version: @version@
+Libs: -L${libdir} -lkres
+Cflags: -I${includedir}
