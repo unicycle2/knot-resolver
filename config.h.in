@@ -7,3 +7,9 @@
 #mesondefine libdnssec_SONAME
 #mesondefine libzscanner_SONAME
 #mesondefine HAS_SYSTEMD
+
+#mesondefine HAVE_ATTRIBUTE_COLD
+#mesondefine HAVE_ATTRIBUTE_NORETURN
+#mesondefine HAVE_ATTRIBUTE_PURE
+#mesondefine HAVE_ATTRIBUTE_UNUSED
+#mesondefine HAVE_ATTRIBUTE_NONNULL

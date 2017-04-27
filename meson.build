@@ -4,9 +4,7 @@ project('knot-resolver', 'c',
 	meson_version : '>0.28.0',
 	license : 'GPL3+')
 
-# add_project_arguments('-std=c99', language : 'c')
-
-# add_project_arguments('-fvisibility=hidden', '-fPIC', language : 'c')
+add_project_arguments('-std=c99', language : 'c')
 
 # Project variables
 libkres_version = '3.0.0'
@@ -49,6 +47,16 @@ endif
 if libsystemd_dep.found()
   conf_data.set('HAS_SYSTEMD', 1)
 endif
+
+# Attributes checks
+compiler = meson.get_compiler('c')
+
+attributes = ['cold', 'noreturn', 'pure', 'unused', 'nonnull', 'specialsnowflake']
+foreach attr : attributes
+  code = 'void func() __attribute__ (('+attr+'));'
+  result = compiler.compiles(code, name : 'has __attribute__ (('+attr+'))')
+  conf_data.set('HAVE_ATTRIBUTE_'+attr.toupper(), result)
+endforeach
 
 configure_file(input : 'config.h.in',
 	       output : 'config.h',
@@ -114,12 +122,15 @@ libkres = library('kres',
 
 # Modules
 
+modules_cpp_args = ['-fvisibility=hidden', '-fPIC']
+
 ## hints module
 shared_module('hints',
 	      ['modules/hints/hints.c'],
 	      include_directories : incdir,
 	      link_with : [libkres, contrib],
 	      name_prefix : '',
+	      cpp_args : modules_cpp_args,
 	      install_dir : abs_moduledir,
 	      install : true)
 
@@ -129,6 +140,7 @@ shared_module('stats',
 	      include_directories : incdir,
 	      link_with : [libkres, contrib],
 	      name_prefix : '',
+	      cpp_args : modules_cpp_args,
 	      install_dir : abs_moduledir,
 	      install : true)
 
@@ -140,6 +152,7 @@ shared_module('cookies',
 	      include_directories : incdir,
 	      link_with: [libkres, contrib],
 	      name_prefix : '',
+	      cpp_args : modules_cpp_args,
 	      install_dir : abs_moduledir,
 	      install : true)
 
@@ -155,6 +168,7 @@ if libmemcached_dep.found()
 		link_with : [libkres],
 		dependencies : libmemcached_dep,
 		name_prefix : '',
+		cpp_args : modules_cpp_args,
 		install_dir : abs_moduledir,
 		install : true)
 endif
@@ -169,6 +183,7 @@ if hiredis_dep.found()
 		link_with : [libkres],
 		dependencies : [hiredis_dep, libuv_dep],
 		name_prefix : '',
+		cpp_args : modules_cpp_args,
 		install_dir : abs_moduledir,
 		install : true)
 endif		
@@ -194,6 +209,7 @@ if libprotobuf_c_dep.found() and libfstrm_dep.found() and protoc_c_cmd.found()
 		link_with : [libkres],
 		dependencies : [libprotobuf_c_dep, libfstrm_dep],
 		name_prefix : '',
+		cpp_args : modules_cpp_args,
 		install_dir : abs_moduledir,
 		install : true)
 endif
