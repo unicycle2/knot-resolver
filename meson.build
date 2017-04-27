@@ -136,13 +136,11 @@ libkres_pc_conf.set('prefix', get_option('prefix'))
 libkres_pc_conf.set('libdir', join_paths(get_option('prefix'), get_option('libdir')))
 libkres_pc_conf.set('includedir', join_paths(get_option('prefix'), get_option('includedir')))
 
-configure_file(input : 'lib/libkres.pc.in',
-	       output : 'libkres.pc',
-	       configuration : libkres_pc_conf)
+libkres_pc = configure_file(input : 'lib/libkres.pc.in',
+			    output : 'libkres.pc',
+			    configuration : libkres_pc_conf)
 
-pkg_config = find_program('pkg-config')
-
-install_data('libkres.pc',
+install_data(libkres_pc,
 	      install_dir : join_paths(get_option('prefix'), get_option('libdir'), get_option('pkgconfigdir')),
 	      install : true)
 
