@@ -1,43 +1,50 @@
 language: c
 os:
-    - osx
+  - osx
 compiler:
-    - clang
+  - clang
 notifications:
-    email:
-        on_success: change
-        on_failure: change
-    slack:
-        rooms: cznic:xNJmvHU2xu2aGtN7Y2eqHKoD
-        on_success: change
-        on_failure: change
-    webhooks:
-        urls: https://webhooks.gitter.im/e/66485d8f591942052faa
-        on_success: change
-        on_failure: change
+  email:
+    on_success: change
+    on_failure: change
+  slack:
+    rooms: cznic:xNJmvHU2xu2aGtN7Y2eqHKoD
+    on_success: change
+    on_failure: change
+  webhooks:
+    urls: https://webhooks.gitter.im/e/66485d8f591942052faa
+    on_success: change
+    on_failure: change
 matrix:
-    fast_finish: true
+  fast_finish: true
 env:
-    global:
-        - PKG_CONFIG_PATH="${HOME}/.local/lib/pkgconfig"
-        - PATH="${HOME}/.local/bin:/usr/local/bin:${PATH}"
-        - DYLD_LIBRARY_PATH="${HOME}/.local/lib"
-        - MALLOC_CHECK_=3
-        - MALLOC_PERTURB_=223
+  global:
+    - PKG_CONFIG_PATH="${HOME}/.local/lib/pkgconfig"
+    - PATH="${HOME}/.local/bin:/usr/local/bin:${PATH}"
+    - DYLD_LIBRARY_PATH="${HOME}/.local/lib"
+    - MALLOC_CHECK_=3
+    - MALLOC_PERTURB_=223
+install:
+  - brew update
+  - brew install ccache
+  - PATH=$PATH:/usr/local/opt/ccache/libexec
+  - brew unlink python || true
+  - brew install python python3 makedepend hiredis libmemcached protobuf-c cmocka jansson gnutls luajit libuv ninja meson lmdb knot
+  - pip install --upgrade pip setuptools || true
+  - pip install dnspython==1.11 cpp-coveralls Jinja2
 before_script:
-    - BOOTSTRAP_CLEANUP=1 ./scripts/bootstrap-depends.sh ${HOME}/.local
-    - rvm get stable || true
+  - rm -rf ${HOME}/.local
+  - ./scripts/bootstrap-depends.sh ${HOME}/.local
+  - rvm get stable || true
+  - cat $(brew --prefix knot)/lib/pkgconfig/libknot.pc | sed -e 's/ -I$(.*//' > ${PKG_CONFIG_PATH}/libknot.pc
 script:
-    - meson --prefix $HOME/.local --werror build
-    - ninja -C build install
-    - ./build/kresd -h
-    - ./build/kresd -V
-    - echo "quit()" | ./build/kresd -a 127.0.0.1#53535 .
+  - meson --prefix $HOME/.local --werror build
+  - ninja -C build install
+  - ./build/kresd -h
+  - ./build/kresd -V
+  - echo "quit()" | ./build/kresd -a 127.0.0.1#53535 .
 #    - CFLAGS="-O2 -g -fno-omit-frame-pointer -DDEBUG" make -j2 check-integration COVERAGE=1 PREFIX=${HOME}/.local DYLD_LIBRARY_PATH=${DYLD_LIBRARY_PATH}
 sudo: false
 cache:
-    directories:
-    - ${HOME}/.local
-    - ${HOME}/.cache/pip
-before_cache:
-    - ninja -C build uninstall
+  - pip
+  - ccache
