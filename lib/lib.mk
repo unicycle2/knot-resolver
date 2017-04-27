@@ -47,7 +47,6 @@ libkres_LIBS := $(contrib_TARGET) $(libknot_LIBS) $(libdnssec_LIBS) $(lmdb_LIBS)
 				$(libuv_LIBS)
 libkres_TARGET := -L$(abspath lib) -lkres
 
-ifeq ($(ENABLE_COOKIES),yes)
 libkres_SOURCES += \
 	lib/cookies/alg_containers.c \
 	lib/cookies/alg_sha.c \
@@ -64,7 +63,6 @@ libkres_HEADERS += \
 	lib/cookies/nonce.h
 
 libkres_LIBS += $(nettle_LIBS)
-endif
 
 lib/zonecut.c: lib/root-hints.inc
 lib/root-hints.inc:

@@ -1,11 +1,7 @@
 # List of built-in modules
 modules_TARGETS := hints \
-                   stats
-
-# DNS cookies
-ifeq ($(ENABLE_COOKIES),yes)
-modules_TARGETS += cookies
-endif
+                   stats \
+                   cookies
 
 ifeq ($(ENABLE_DNSTAP),yes)
 modules_TARGETS += dnstap
