@@ -69,9 +69,6 @@ configure_file(input : 'config.h.in',
 
 # Include directories
 
-incdir = include_directories('lib/generic',
-			     'contrib')
-
 # contrib convenience library
 
 contrib_sources = ['contrib/ccan/asprintf/asprintf.c',
@@ -86,7 +83,12 @@ contrib_sources = ['contrib/ccan/asprintf/asprintf.c',
 if not lmdb_dep.found()
   contrib_sources += ['contrib/lmdb/mdb.c',
                       'contrib/lmdb/midl.c']
-  incdir += ['contrib/lmbd']
+  incdir = include_directories('lib/generic',
+			       'contrib',
+			       'contrib/lmdb')
+else
+  incdir = include_directories('lib/generic',
+			       'contrib')
 endif
 
 contrib = static_library('contrib',
