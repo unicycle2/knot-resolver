@@ -20,6 +20,7 @@ libdnssec_dep   = dependency('libdnssec', version : '>= 2.3.1')
 libzscanner_dep = dependency('libzscanner', version : '>= 2.3.1')
 libuv_dep       = dependency('libuv', version : '>= 1.0')
 libsystemd_dep  = dependency('libsystemd', version : '>= 227', required : false)
+nettle_dep      = dependency('nettle')
 gnutls_dep      = dependency('gnutls')
 luajit_dep      = dependency('luajit')
 lmdb_dep        = dependency('lmdb', required : false)
@@ -51,12 +52,16 @@ if libsystemd_dep.found()
 endif
 
 # Attributes checks
-attributes = ['cold', 'noreturn', 'pure', 'unused', 'nonnull']
+attributes = ['cold', 'noreturn', 'pure', 'unused', 'nonnull', 'const']
 foreach attr : attributes
   code = 'void func(void *) __attribute__ (('+attr+'));'
   result = compiler.compiles(code, args : ['-Wattributes', '-Werror'], name : 'has __attribute__ (('+attr+'))')
   conf_data.set10('HAVE_ATTRIBUTE_'+attr.to_upper(), result)
 endforeach
+
+code = 'void func(void *) __attribute__ ((visibility("default")));'
+result = compiler.compiles(code, args : ['-Wattributes', '-Werror'], name : 'has __attribute__ ((visibility("default")))')
+conf_data.set10('HAVE_ATTRIBUTE_VISIBILITY', result)
 
 configure_file(input : 'config.h.in',
 	       output : 'config.h',
@@ -108,9 +113,14 @@ libkres_sources = ['lib/generic/lru.c',
 		   'lib/zonecut.c',
 		   'lib/rplan.c',
 		   'lib/cache.c',
-		   'lib/cdb_lmdb.c']
+		   'lib/cdb_lmdb.c',
+		   'lib/cookies/alg_containers.c',
+		   'lib/cookies/alg_sha.c',
+		   'lib/cookies/helper.c',
+		   'lib/cookies/lru_cache.c',
+		   'lib/cookies/nonce.c']
 
-libkres_deps = [threads_dep, libuv_dep, libknot_dep, libdnssec_dep, lmdb_dep]
+libkres_deps = [threads_dep, libuv_dep, libknot_dep, libdnssec_dep, lmdb_dep, nettle_dep]
 
 libkres = library('kres',
 		  libkres_sources,
@@ -132,16 +142,13 @@ configure_file(input : 'lib/libkres.pc.in',
 
 pkg_config = find_program('pkg-config')
 
-custom_target('libkres.pc',
-	      input : 'libkres.pc',
-	      output : 'libkres.pc',
-	      command : [pkg_config, '--validate', '@OUTPUT@'],
+install_data('libkres.pc',
 	      install_dir : join_paths(get_option('prefix'), get_option('libdir'), get_option('pkgconfigdir')),
 	      install : true)
 
 # Modules
 
-modules_cpp_args = ['-fvisibility=hidden', '-fPIC']
+modules_cpp_args = ['-fvisibility=hidden']
 
 ## hints module
 shared_module('hints',
@@ -467,13 +474,22 @@ if cmocka_dep.found()
 			dependencies : [cmocka_dep, lmdb_dep])
   test('test_module', test_module)
 
-#  test_cache = executable('test_cache',
-#			'tests/test_cache.c',
-#			link_with : [libkres, contrib],
-#			include_directories : incdir,
-#			dependencies : [cmocka_dep, lmdb_dep])
-#  test('test_cache', test_cache)
-
+  mock_cmodule = shared_module('tests/mock_cmodule',
+			       ['tests/mock_cmodule.c'],
+			       include_directories : incdir,
+			       link_with : [contrib],
+			       name_prefix : '',
+			       cpp_args : ['-fPIC', '-fvisibility=hidden'],
+			       install : false)
+  
+  test_cache = executable('test_cache',
+			  'tests/test_cache.c',
+			  link_with : [libkres, contrib],
+			  include_directories : incdir,
+			  link_args : '-ldl',
+			  dependencies : [libknot_dep, cmocka_dep, lmdb_dep])
+  test('test_cache', test_cache)
+  
   test_zonecut = executable('test_zonecut',
 			'tests/test_zonecut.c',
 			link_with : [libkres, contrib],

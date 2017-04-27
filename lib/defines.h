@@ -22,17 +22,33 @@
 #include <libknot/rrset.h>
 
 /* Function attributes */
-#if __GNUC__ >= 4
+#if HAVE_ATTRIBUTE_VISIBILITY
 #define KR_EXPORT __attribute__ ((visibility ("default")))
-#define KR_CONST __attribute__((__const__))
-#define KR_PURE __attribute__((__pure__))
-#define KR_NORETURN __attribute__((__noreturn__))
-#define KR_COLD __attribute__((__cold__))
 #else
 #define KR_EXPORT
+#endif
+
+#if HAVE_ATTRIBUTE_CONST
+#define KR_CONST __attribute__((__const__))
+#else
 #define KR_CONST
+#endif
+
+#if HAVE_ATTRIBUTE_PURE
+#define KR_PURE __attribute__((__pure__))
+#else
 #define KR_PURE
+#endif
+
+#if HAVE_ATTRIBUTE_NORETURN
+#define KR_NORETURN __attribute__((__noreturn__))
+#else
 #define KR_NORETURN
+#endif
+
+#if HAVE_ATTRIBUTE_COLD
+#define KR_COLD __attribute__((__cold__))
+#else
 #define KR_COLD
 #endif
 
