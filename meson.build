@@ -37,15 +37,27 @@ conf_data = configuration_data()
 conf_data.set_quoted('PACKAGE_VERSION', meson.project_version())
 conf_data.set_quoted('MODULEDIR', abs_moduledir)
 
-if libknot_dep.version().version_compare('>= 2.4.0')
-  conf_data.set_quoted('libknot_SONAME', 'libknot.so.5')
-  conf_data.set_quoted('libzscanner_SONAME', 'libzscanner.so.1')
-  conf_data.set_quoted('libdnssec_SONAME', 'libdnssec.so.2')
+pkg_config = find_program('pkg-config')
+
+if host_machine.system() == 'darwin'
+  so_tool = find_program('otool')
+  so_ext = '.dylib'
 else
-  conf_data.set_quoted('libknot_SONAME', 'libknot.so.4')
-  conf_data.set_quoted('libzscanner_SONAME', 'libzscanner.so.1')
-  conf_data.set_quoted('libdnssec_SONAME', 'libdnssec.so.2')
+  so_tool = find_program('scripts/objdump_soname')
+  so_ext = '.so'
 endif
+
+knot_libraries = ['libknot', 'libdnssec', 'libzscanner']
+foreach lib : knot_libraries
+  lib_libdir = run_command(pkg_config, '--variable=libdir', lib).stdout().strip()
+  lib_fullpath = join_paths(lib_libdir, lib+so_ext)
+  lib_soname = run_command(so_tool, '-Dm', lib_fullpath).stdout().strip()
+  message(lib+' SONAME is: '+lib_soname)
+  if lib_soname == ''
+    error(lib+' SONAME is empty, fix the build script.')
+  endif
+  conf_data.set_quoted(lib+'_SONAME', lib_soname)
+endforeach
 
 if libsystemd_dep.found()
   conf_data.set('HAS_SYSTEMD', 1)
