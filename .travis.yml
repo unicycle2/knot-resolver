@@ -29,7 +29,7 @@ install:
   - brew install ccache
   - PATH=$PATH:/usr/local/opt/ccache/libexec
   - brew unlink python || true
-  - brew install python python3 makedepend hiredis libmemcached protobuf-c cmocka jansson gnutls luajit libuv ninja meson lmdb knot
+  - brew install python python3 makedepend hiredis libmemcached protobuf-c cmocka jansson gnutls luajit libuv ninja meson lmdb knot fstrm
   - pip install --upgrade pip setuptools || true
   - pip install dnspython==1.11 cpp-coveralls Jinja2
 before_script:
