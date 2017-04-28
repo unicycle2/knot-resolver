@@ -1,6 +1,3 @@
-#ifndef _GNU_SOURCE
-#mesondefine _GNU_SOURCE
-#endif
 #mesondefine PACKAGE_VERSION
 #mesondefine MODULEDIR
 #mesondefine libknot_SONAME
