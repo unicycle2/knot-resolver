@@ -32,11 +32,12 @@ The following is a list of software required to build Knot DNS Resolver from sou
 .. csv-table::
    :header: "Requirement", "Required by", "Notes"
 
-   "`GNU Make`_ 3.80+", "*all*", "*(build only)*"
+   "`The Meson Build system`_ 0.38+", "*all*", "*(build only)*"
+   "`Ninja`_", "*all*", "*(build only)*"
    "C compiler", "*all*", "*(build only)* [#]_"
    "`pkg-config`_", "*all*", "*(build only)* [#]_"
    "hexdump or xxd", "``daemon``", "*(build only)*"
-   "libknot_ 2.1+", "*all*", "Knot DNS library (requires autotools, GnuTLS and Jansson)."
+   "libknot_ 2.4+", "*all*", "Knot DNS library (requires autotools, GnuTLS and Jansson)."
    "LuaJIT_ 2.0+", "``daemon``", "Embedded scripting language."
    "libuv_ 1.7+", "``daemon``", "Multiplatform I/O and services (libuv_ 1.0 with limitations [#]_)."
 
@@ -73,7 +74,7 @@ Most of the dependencies can be resolved from packages, here's an overview for s
 
 .. code-block:: bash
 
-   sudo apt-get install pkg-config libknot-dev libuv1-dev libcmocka-dev libluajit-5.1-dev
+   sudo apt-get install pkg-config libknot-dev libuv1-dev libcmocka-dev libluajit-5.1-dev meson
 
 * **Ubuntu** - unknown.
 * **Fedora**
@@ -96,11 +97,11 @@ Most of the dependencies can be resolved from packages, here's an overview for s
 * **FreeBSD** - unknown.
 * **NetBSD** - unknown.
 * **OpenBSD** - unknown.
-* **Mac OS X** - most of the dependencies can be found through `Homebrew <http://brew.sh/>`_, with the exception of libknot.
+* **Mac OS X** - the dependencies can be installed through `Homebrew <http://brew.sh/>`_.
 
 .. code-block:: bash
 
-   brew install pkg-config libuv luajit cmocka
+   brew install pkg-config libuv luajit knot lmdb ninja meson
 
 Building from sources 
 ---------------------
@@ -109,43 +110,30 @@ The Knot DNS Resolver depends on the the Knot DNS library, recent version of lib
 
 .. code-block:: bash
 
-   $ make info # See what's missing
-
-When you have all the dependencies ready, you can build and install.
-
-.. code-block:: bash
-
-   $ make PREFIX="/usr/local"
-   $ make install PREFIX="/usr/local"
+   $ meson --strip --buildtype=release -Dprefix=/usr/local build
+   $ ninja -C build install
 
 .. note:: Always build with ``PREFIX`` if you want to install, as it is hardcoded in the executable for module search path.
     Production code should be compiled with ``-DNDEBUG``.
     If you build the binary with ``-DNOVERBOSELOG``, verbose logging will be disabled as well.
 
-Alternatively you can build only specific parts of the project, i.e. ``library``.
-
-.. code-block:: bash
-
-   $ make lib
-   $ make lib-install
-
-.. note:: Documentation is not built by default, run ``make doc`` to build it.
+.. note:: Documentation is not built by default, run ``ninja -C doc`` to build it.
 
 Building with security compiler flags
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+TODO: Rewrite...
+
 Knot DNS Resolver enables certain `security compile-time flags <https://wiki.debian.org/Hardening#Notes_on_Memory_Corruption_Mitigation_Methods>`_ that do not affect performance.
-You can add more flags to the build by appending them to `CFLAGS` variable, e.g. ``make CFLAGS="-fstack-protector"``.
+You can add more flags to the build by appending them to `CFLAGS` variable, e.g. ``CFLAGS="-fstack-protector" meson ...``.
 
   .. csv-table::
    :header: "Method", "Status", "Notes"
 
    "-fstack-protector", "*disabled*", "(must be specifically enabled in CFLAGS)"
    "-D_FORTIFY_SOURCE=2", "**enabled**", ""
-   "-pie", "**enabled**", "enables ASLR for kresd (disable with ``make HARDENING=no``)"
+   "-pie", "**enabled**", "enables ASLR for kresd"
    "RELRO", "**enabled**", "full [#]_"
-
-You can also disable linker hardening when it's unsupported with ``make HARDENING=no``.
 
 .. [#] See `checksec.sh <http://www.trapkit.de/tools/checksec.html>`_
 
@@ -156,10 +144,7 @@ The build system supports both DESTDIR_ and `amalgamated builds <https://www.sql
 
 .. code-block:: bash
 
-   $ make install DESTDIR=/tmp/stage # Staged install
-   $ make all install AMALG=yes # Amalgamated build
-
-Amalgamated build assembles everything in one source file and compiles it. It is useful for packages, as the compiler sees the whole program and is able to produce a smaller and faster binary. On the other hand, it complicates debugging.
+   $ DESTDIR=/tmp/stage ninja -C build install
 
 .. tip:: There is a template for service file and AppArmor profile to help you kickstart the package.
 
@@ -190,8 +175,8 @@ By default the resolver library is built as a dynamic library with versioned ABI
 
 .. code-block:: bash
 
-   $ make BUILDMODE=dynamic # Default, create dynamic library
-   $ make BUILDMODE=static  # Create static library
+   $ meson --default-library shared build-shared # Default, create dynamic library
+   $ meson --default-library static build-static  # Create static library
 
 When the library is linked statically, it usually produces a smaller binary. However linking it to various C modules might violate ODR and increase the size. 
 
@@ -199,37 +184,21 @@ Resolving dependencies
 ~~~~~~~~~~~~~~~~~~~~~~
 
 The build system relies on `pkg-config`_ to find dependencies.
-You can override it to force custom versions of the software by environment variables.
-
-.. code-block:: bash
-
-   $ make libknot_CFLAGS="-I/opt/include" libknot_LIBS="-L/opt/lib -lknot -ldnssec"
-
-Optional dependencies may be disabled as well using ``HAS_x=yes|no`` variable.
-
-.. code-block:: bash
-
-   $ make HAS_go=no HAS_cmocka=no
 
 .. warning:: If the dependencies lie outside of library search path, you need to add them somehow.
    Try ``LD_LIBRARY_PATH`` on Linux/BSD, and ``DYLD_FALLBACK_LIBRARY_PATH`` on OS X.
    Otherwise you need to add the locations to linker search path.
 
-Several dependencies may not be in the packages yet, the script pulls and installs all dependencies in a chroot.
-You can avoid rebuilding dependencies by specifying `BUILD_IGNORE` variable, see the Dockerfile_ for example.
-Usually you only really need to rebuild libknot_.
-
-.. code-block:: bash
-
-   $ export FAKEROOT="${HOME}/.local"
-   $ export PKG_CONFIG_PATH="${FAKEROOT}/lib/pkgconfig"
-   $ export BUILD_IGNORE="..." # Ignore installed dependencies
-   $ ./scripts/bootstrap-depends.sh ${FAKEROOT}
-
 Building extras
 ~~~~~~~~~~~~~~~
 
-The project can be built with code coverage tracking using the ``COVERAGE=1`` variable.
+The project can be built with code coverage tracking using:
+
+.. code-block:: bash
+
+   $ cd build
+   $ mesonconf -Db_coverage=true
+   $ ninja
 
 Running unit and integration tests
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -241,7 +210,7 @@ The integration tests use Deckard, the `DNS test harness <deckard>`_.
 
 .. code-block:: bash
 
-	$  make check-integration
+	$ ninja -C build check-integration
 
 Note that the daemon and modules must be installed first before running integration tests, the reason is that the daemon
 is otherwise unable to find and load modules.
@@ -282,7 +251,8 @@ You can hack on the container by changing the container entrypoint to shell like
 .. _breathe: https://github.com/michaeljones/breathe
 .. _Sphinx: http://sphinx-doc.org/
 .. _sphinx_rtd_theme: https://pypi.python.org/pypi/sphinx_rtd_theme
-.. _GNU Make: https://www.gnu.org/software/make/
+.. _The Meson Build system: http://mesonbuild.com/
+.. _Ninja: https://ninja-build.org/
 .. _pkg-config: https://www.freedesktop.org/wiki/Software/pkg-config/
 .. _libknot: https://gitlab.labs.nic.cz/labs/knot
 .. _cmocka: https://cmocka.org/

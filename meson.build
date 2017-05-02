@@ -517,3 +517,5 @@ if cmocka_dep.found()
   test('test_rplan', test_rplan)
 
 endif
+
+subdir('doc')
