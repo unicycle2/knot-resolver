@@ -518,4 +518,48 @@ if cmocka_dep.found()
 
 endif
 
-subdir('doc')
+doxygen = find_program('doxygen')
+sphinx = find_program('sphinx-build')
+
+if doxygen.found() and sphinx.found()
+  sphinx_sources = [
+    'daemon/README.rst',
+    'modules/dns64/README.rst',
+    'modules/hints/README.rst',
+    'modules/graphite/README.rst',
+    'modules/ketcd/README.rst',
+    'modules/version/README.rst',
+    'modules/renumber/README.rst',
+    'modules/http/README.rst',
+    'modules/workarounds/README.rst',
+    'modules/redis/README.rst',
+    'modules/daf/README.rst',
+    'modules/dnstap/README.rst',
+    'modules/predict/README.rst',
+    'modules/README.rst',
+    'modules/stats/README.rst',
+    'modules/policy/README.rst',
+    'modules/cookies/README.rst',
+    'modules/kmemcached/README.rst',
+    'modules/view/README.rst',
+    'tests/README.rst',
+    'tests/deckard/SCENARIO_GUIDE.rst',
+    'tests/deckard/SCENARIO_EXAMPLE.rst',
+    'tests/deckard/README.rst',
+    'lib/generic/README.rst',
+    'lib/README.rst',
+    'doc/modules.rst',
+    'doc/build.rst',
+    'doc/daemon.rst',
+    'doc/index.rst',
+    'doc/modules_api.rst',
+    'doc/lib.rst',
+  ]
+
+  custom_target('docs',
+		command: [sphinx, '-W', '-b', 'html', join_paths(meson.current_source_dir(), 'doc'), '@OUTPUT@'],
+		input: sphinx_sources,
+		output: 'html',
+		build_by_default: true)
+  install_subdir(join_paths(meson.current_build_dir(), 'html'), install_dir: 'share/doc/knot-resolver/')
+endif
