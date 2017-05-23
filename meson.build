@@ -563,3 +563,13 @@ if doxygen.found() and sphinx.found()
 		build_by_default: true)
   install_subdir(join_paths(meson.current_build_dir(), 'html'), install_dir: 'share/doc/knot-resolver/')
 endif
+
+kresd_run = find_program('tests/deckard/kresd_run.sh')
+
+if kresd_run.found()
+
+  custom_target('check-integration',
+		command: [kresd_run, meson.current_build_dir(), meson.current_source_dir()],
+		output: 'deckard.log',
+		build_by_default: false)
+endif
