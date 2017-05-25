@@ -1,4 +1,4 @@
-image: cznic/ubuntu:16.04
+image: cznic/ubuntu:16.04-knot-resolver
 
 stages:
   - configure
@@ -13,10 +13,6 @@ variables:
 
 configure:linux:amd64:
   stage: configure
-  before_script:
-    - apt-get -yqq update
-    - apt-get -yqq install python3 ninja-build python3-pip
-    - pip3 install meson
   script:
     - meson -Dprefix=$(pwd)/.local build
   artifacts:
@@ -30,10 +26,6 @@ build:linux:amd64:
   stage: build
   dependencies:
     - configure:linux:amd64
-  before_script:
-    - apt-get -yqq update
-    - apt-get -yqq install python3 ninja-build python3-pip
-    - pip3 install meson
   script:
     - ninja -C build
     - ninja -C build install
@@ -46,10 +38,6 @@ build:linux:amd64:
 
 test:linux:amd64:
   stage: test
-  before_script:
-    - apt-get -yqq update
-    - apt-get -yqq install python3 ninja-build python3-pip
-    - pip3 install meson
   script:
     - ninja -C build test
   dependencies:
@@ -61,10 +49,6 @@ test:linux:amd64:
 
 deckard:linux:amd64:
   stage: test
-  before_script:
-    - apt-get -yqq update
-    - apt-get -yqq install python3 ninja-build python3-pip
-    - pip3 install meson
   script:
     - ninja -C build check-integration
   dependencies:
