@@ -28,6 +28,7 @@ build:linux:amd64:
     - configure:linux:amd64
   script:
     - ninja -C build
+    - ninja -C build install
   artifacts:
     untracked: true
   tags:
