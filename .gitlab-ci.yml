@@ -53,8 +53,6 @@ deckard:linux:amd64:
     - ninja -C build check-integration
   dependencies:
     - build:linux:amd64
-  except:
-    - meson-build
   tags:
     - docker
     - linux
@@ -78,8 +76,6 @@ respdiff:linux:amd64:
     - docker
     - linux
     - amd64
-  except:
-    - meson-build
   allow_failure: true
 
 #arm_build:
