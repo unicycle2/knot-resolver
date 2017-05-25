@@ -1,2 +1,3 @@
 option('moduledir', type : 'string', value : 'knot-resolver', description : 'Modules library subdirectory.')
 option('pkgconfigdir', type : 'string', value : 'pkgconfig', description : 'pkgconfig directory.')
+option('bytecode', type : 'boolean', value : false, description : 'whether to precompile lua files into luajit bytecode.')

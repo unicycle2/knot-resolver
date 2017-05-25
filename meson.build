@@ -266,7 +266,11 @@ lua_modules = ['modules/policy/policy.lua',
 	       'modules/daf/daf.lua',
 	       'modules/workarounds/workarounds.lua']
 
-luajit_cmd = find_program('luajit', required : true)
+if get_option('bytecode')
+  luajit_cmd = find_program('luajit', required : true)
+else
+  luajit_cmd = find_program('scripts/fake_luajit', required : true)
+endif
 
 foreach module : lua_modules
   lua_module = custom_target(module,
