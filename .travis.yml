@@ -29,9 +29,9 @@ install:
   - brew install ccache
   - PATH=$PATH:/usr/local/opt/ccache/libexec
   - brew unlink python || true
-  - brew install python python3 makedepend hiredis libmemcached protobuf-c cmocka jansson gnutls luajit libuv ninja meson lmdb knot fstrm
+  - brew install python python3 makedepend hiredis libmemcached protobuf-c cmocka jansson gnutls luajit libuv ninja meson lmdb knot fstrm libyaml
   - pip install --upgrade pip setuptools || true
-  - pip install dnspython==1.11 cpp-coveralls Jinja2
+  - pip install dnspython==1.11 cpp-coveralls Jinja2 pyyaml
 before_script:
   - rm -rf ${HOME}/.local
   - ./scripts/bootstrap-depends.sh ${HOME}/.local
