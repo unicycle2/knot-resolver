@@ -14,7 +14,7 @@ variables:
 configure:linux:amd64:
   stage: configure
   script:
-    - meson --prefix=$(pwd)/.local build
+    - meson build
   artifacts:
     untracked: true
   tags:
@@ -28,7 +28,6 @@ build:linux:amd64:
     - configure:linux:amd64
   script:
     - ninja -C build
-    - ninja -C build install
   artifacts:
     untracked: true
   tags:
@@ -64,7 +63,7 @@ respdiff:linux:amd64:
   image: cznic/ubuntu-respdif:16.04
   stage: test
   script:
-    - LD_LIBRARY_PATH=$(pwd)/.local/lib /home/kresdbench/run.sh $(pwd)/.local/sbin/kresd
+    - /home/kresdbench/run.sh $(pwd)/build/kresd
     - /home/kresdbench/resolver-benchmarking/response_differences/nightly.sh
     - cp -r /home/kresdbench/resolver-benchmarking/response_differences/results $(pwd)
   artifacts:
