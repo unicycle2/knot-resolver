@@ -9,6 +9,7 @@ stages:
 variables:
   DEBIAN_FRONTEND: noninteractive
   LC_ALL: C.UTF-8
+  GIT_SUBMODULE_STRATEGY: recursive
 
 configure:linux:amd64:
   stage: configure
@@ -16,7 +17,6 @@ configure:linux:amd64:
     - apt-get -yqq update
     - apt-get -yqq install python3 ninja-build python3-pip
     - pip3 install meson
-    - git submodule update --init --recursive
   script:
     - meson -Dprefix=$(pwd)/.local build
   artifacts:
