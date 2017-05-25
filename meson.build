@@ -529,8 +529,8 @@ if cmocka_dep.found()
 
 endif
 
-doxygen = find_program('doxygen')
-sphinx = find_program('sphinx-build')
+doxygen = find_program('doxygen', required : false)
+sphinx = find_program('sphinx-build', required : false)
 
 if doxygen.found() and sphinx.found()
   sphinx_sources = [
