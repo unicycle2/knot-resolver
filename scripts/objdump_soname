@@ -1,2 +1,2 @@
 #!/bin/sh
-objdump -p $2 | sed -ne 's/[[:space:]]*SONAME[[:space:]]*\([^[:space:].]*\.so\.[0-4]*\)/\1/p'
+objdump -p "${2}" | sed -ne 's/[[:space:]]*SONAME[[:space:]]*\([^[:space:].]*\.so\.[0-4]*\)/\1/p'

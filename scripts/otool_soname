@@ -1,0 +1,2 @@
+#!/bin/sh
+otool -Dm "${2}" | sed -ne "s,.*/\(${1}\.[0-9]*.dylib\),\1,p"

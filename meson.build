@@ -41,7 +41,7 @@ conf_data.set_quoted('MODULEDIR', abs_moduledir)
 pkg_config = find_program('pkg-config')
 
 if host_machine.system() == 'darwin'
-  so_tool = find_program('otool')
+  so_tool = find_program('scripts/otool_soname')
   so_ext = '.dylib'
 else
   so_tool = find_program('scripts/objdump_soname')
@@ -52,7 +52,7 @@ knot_libraries = ['libknot', 'libdnssec', 'libzscanner']
 foreach lib : knot_libraries
   lib_libdir = run_command(pkg_config, '--variable=libdir', lib).stdout().strip()
   lib_fullpath = join_paths(lib_libdir, lib+so_ext)
-  lib_soname = run_command(so_tool, '-Dm', lib_fullpath).stdout().strip()
+  lib_soname = run_command(so_tool, lib, lib_fullpath).stdout().strip()
   message(lib+' SONAME is: '+lib_soname)
   if lib_soname == ''
     error(lib+' SONAME is empty, fix the build script.')
