@@ -59,6 +59,8 @@ deckard:linux:amd64:
     - amd64
 
 respdiff:linux:amd64:
+  variables:
+    GIT_SUBMODULE_STRATEGY: none
   image: cznic/ubuntu-respdif:16.04
   stage: test
   script:
