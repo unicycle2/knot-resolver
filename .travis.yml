@@ -39,10 +39,9 @@ before_script:
   - cat $(brew --prefix knot)/lib/pkgconfig/libknot.pc | sed -e 's/ -I$(.*//' > ${PKG_CONFIG_PATH}/libknot.pc
 script:
   - meson --prefix $HOME/.local build
+  - ninja -C build
   - ninja -C build install
-  - ./build/kresd -h
-  - ./build/kresd -V
-  - echo "quit()" | ./build/kresd -a 127.0.0.1#53535 .
+  - ninja -C build test
   - ninja -C build check-integration
 sudo: false
 cache:

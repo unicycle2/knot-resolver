@@ -14,7 +14,7 @@ variables:
 configure:linux:amd64:
   stage: configure
   script:
-    - meson -Dprefix=$(pwd)/.local build
+    - meson --prefix=$(pwd)/.local build
   artifacts:
     untracked: true
   tags:
