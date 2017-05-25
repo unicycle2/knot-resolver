@@ -1,18 +1,38 @@
 image: cznic/ubuntu:16.04
 
+stages:
+  - configure
+  - build
+  - test
+  - deploy
+
 variables:
   DEBIAN_FRONTEND: noninteractive
   LC_ALL: C.UTF-8
-  
-build:linux:amd64:
-  stage: build
+
+configure:linux:amd64:
+  stage: configure
   before_script:
     - apt-get -yqq update
     - apt-get -yqq install python3 ninja-build python3-pip
     - pip3 install meson
+    - git submodule update --init --recursive
   script:
     - meson -Dprefix=$(pwd)/.local build
-    - cd build && ninja install
+  artifacts:
+    untracked: true
+  tags:
+    - docker
+    - linux
+    - amd64
+  
+build:linux:amd64:
+  stage: build
+  dependencies:
+    - configure:linux:amd64
+  script:
+    - ninja -C build
+    - ninja -C build install
   artifacts:
     untracked: true
   tags:
@@ -27,7 +47,7 @@ test:linux:amd64:
     - apt-get -yqq install python3 ninja-build python3-pip
     - pip3 install meson
   script:
-    - cd build && ninja test
+    - ninja -C build test
   dependencies:
     - build:linux:amd64
   tags:
@@ -38,8 +58,7 @@ test:linux:amd64:
 deckard:linux:amd64:
   stage: test
   script:
-    - git submodule update --init --recursive
-    - PREFIX=$(pwd)/.local MAKEFLAGS="--jobs $(nproc) --keep-going" make check-integration
+    - ninja -C build check-integration
   dependencies:
     - build:linux:amd64
   except:
