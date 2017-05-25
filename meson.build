@@ -27,6 +27,7 @@ lmdb_dep        = dependency('lmdb', required : false)
 
 cmocka_dep      = dependency('cmocka', required : false)
 
+cat = find_program('cat')
 sed = find_program('sed')
 
 # Configuration Data
@@ -252,76 +253,60 @@ if libprotobuf_c_dep.found() and libfstrm_dep.found() and protoc_c_cmd.found()
 		install : true)
 endif
 
-## policy module
-install_data(['modules/policy/policy.lua',
-	      'modules/policy/aho-corasick.lua'],
-	     install_dir : abs_moduledir,
-	     install : true)
+lua_modules = ['modules/policy/policy.lua',
+	       'modules/policy/aho-corasick.lua',
+	       'modules/ketcd/ketcd.lua',
+	       'modules/graphite/graphite.lua',
+	       'modules/view/view.lua',
+	       'modules/predict/predict.lua',
+	       'modules/dns64/dns64.lua',
+	       'modules/renumber/renumber.lua',
+	       'modules/http/http.lua',
+	       'modules/http/prometheus.lua',
+	       'modules/daf/daf.lua',
+	       'modules/workarounds/workarounds.lua']
 
-## ketcd module
-install_data(['modules/ketcd/ketcd.lua'],
-	     install_dir : abs_moduledir,
-	     install : true)
+luajit_cmd = find_program('luajit', required : true)
 
-## graphite module
-install_data(['modules/graphite/graphite.lua'],
-	     install_dir : abs_moduledir,
-	     install : true)
-
-## view module
-install_data(['modules/view/view.lua'],
-	     install_dir : abs_moduledir,
-	     install : true)
-
-## predict module
-install_data(['modules/predict/predict.lua'],
-	     install_dir : abs_moduledir,
-	     install : true)
-
-## dns64 module
-install_data(['modules/dns64/dns64.lua'],
-	     install_dir : abs_moduledir,
-	     install : true)
-
-## renumber module
-install_data(['modules/renumber/renumber.lua'],
-	     install_dir : abs_moduledir,
-	     install : true)
-
-## http module
-install_data(['modules/http/http.lua',
-	      'modules/http/prometheus.lua'],
-	     install_dir : abs_moduledir,
-	     install : true)
-
-install_subdir('modules/http/http/',
-	       install_dir : abs_moduledir,
-	       install : true)
-
-## daf module
-install_data(['modules/daf/daf.lua'],
-	     install_dir : abs_moduledir,
-	     install : true)
-install_data('modules/daf/daf.js',
-	     install_dir : join_paths(abs_moduledir, 'daf'),
-	     install : true)
-
-## workarounds module
-install_data(['modules/workarounds/workarounds.lua'],
-	     install_dir : abs_moduledir,
-	     install : true)
-
+foreach module : lua_modules
+  lua_module = custom_target(module,
+			     input : module,
+			     output : module.split('/').get(-1),
+			     command : [luajit_cmd, '-b', '@INPUT@', '@OUTPUT@'],
+			     install_dir : abs_moduledir,
+			     install : true,
+			     build_by_default : true)
+endforeach
+  
 ## version module
-version_lua = custom_target('version.lua',
+version_inc = custom_target('version.inc',
 			    input : ['modules/version/version.lua.in'],
-			    output : ['version.lua'],
+			    output : ['version.lua.in'],
 			    capture : true,
 		      	    command : [sed,
 				       '-e', 's,@VERSION@,'+meson.project_version()+',g',
 				       '@INPUT@'],
-			    install_dir : abs_moduledir,
-			    install : true)
+			    install : false)
 
+version_lua = custom_target('version.lua',
+			    input : version_inc,
+			    output : 'version.lua',
+			    command : [luajit_cmd, '-b', '@INPUT@', '@OUTPUT@'],
+			    install_dir : abs_moduledir,
+			    install : true,
+			    build_by_default : true)
+
+## http module additional files
+install_subdir('modules/http/http/',
+	       install_dir : abs_moduledir,
+	       install : true)
+
+## daf module additional files
+install_data('modules/daf/daf.js',
+	     install_dir : join_paths(abs_moduledir, 'daf'),
+	     install : true)
+
+			   
 # Embedded Lua files
 
 xxd_lua = find_program('scripts/embed-lua.sh')
@@ -338,25 +323,39 @@ else
   libknot_rrset_txt_dump = 'false'
 endif
 
-kres_lua = custom_target('kres.lua',
+kres_inc = custom_target('kres.inc',
 			 input : ['daemon/lua/kres.lua.in'],
-			 output : ['kres.lua'],
+			 output : ['kres.inc'],
 			 capture : true,
 			 command : [sed,
 				    '-e', 's,@KNOT_RRSET_TXT_DUMP@,'+libknot_rrset_txt_dump+',g',
 				    '@INPUT@'],
-			 install_dir : abs_moduledir,
-			 install : true)
+			 install : false)
 
-trust_anchors_lua = custom_target('trust_anchors.lua',
+kres_lua = custom_target('kres.lua',
+			 input : kres_inc,
+			 output : ['kres.lua'],
+			 command : [luajit_cmd, '-b', '@INPUT@', '@OUTPUT@'],
+			 install_dir : abs_moduledir,
+			 install : true,
+			 build_by_default : true)
+
+trust_anchors_inc = custom_target('trust_anchors.inc',
 				  input : 'daemon/lua/trust_anchors.lua.in',
-				  output : 'trust_anchors.lua',
+				  output : 'trust_anchors.inc',
 				  capture : true,
 				  command : [sed,
 					     '-e', 's,@ETCDIR@,'+abs_sysconfdir+',g',
 					     '@INPUT@'],
-				  install_dir : abs_moduledir,
-				  install : true)
+				  install : false)
+
+trust_anchors_lua = custom_target('trust_anchors.lua',
+			    input : trust_anchors_inc,
+			    output : 'trust_anchors.lua',
+			    command : [luajit_cmd, '-b', '@INPUT@', '@OUTPUT@'],
+			    install_dir : abs_moduledir,
+			    install : true,
+			    build_by_default : true)
 
 if libzscanner_dep.version().version_compare('>= 2.4.2')
   libzscanner_comments = 'true'
@@ -364,15 +363,22 @@ else
   libzscanner_comments = 'false'
 endif
 
-zonefile_lua = custom_target('zonefile.lua',
+zonefile_inc = custom_target('zonefile.inc',
 			     input : ['daemon/lua/zonefile.lua.in'],
-			     output : ['zonefile.lua'],
+			     output : ['zonefile.inc'],
 			     capture : true,
 			     command : [sed,
 					'-e', 's,@LIBZSCANNER_COMMENTS@,'+libzscanner_comments+',g',
 					'@INPUT@'],
-			     install_dir : abs_moduledir,
-			     install : true)
+			     install : false)
+
+zonefile_lua = custom_target('zonefile.lua',
+			    input : zonefile_inc,
+			    output : 'zonefile.lua',
+			    command : [luajit_cmd, '-b', '@INPUT@', '@OUTPUT@'],
+			    install_dir : abs_moduledir,
+			    install : true,
+			    build_by_default : true)
 
 # kresd daemon
 
@@ -409,8 +415,13 @@ executable('kresd',
 run_target('regenerate',
 	   command : 'daemon/lua/kres-gen.sh')
 
-install_data(['daemon/lua/kres-gen.lua'],
-	     install_dir : abs_moduledir)
+kres_gen_module = custom_target('kres_gen.lua',
+				input : 'daemon/lua/kres-gen.lua',
+				output : 'kres-gen.lua',
+				command : [luajit_cmd, '-b', '@INPUT@', '@OUTPUT@'],
+				install_dir : abs_moduledir,
+				install : true,
+				build_by_default : true)
 
 # kresc CLI
 libedit_dep     = dependency('libedit', required : false)
@@ -560,7 +571,7 @@ if doxygen.found() and sphinx.found()
 		command: [sphinx, '-W', '-b', 'html', join_paths(meson.current_source_dir(), 'doc'), '@OUTPUT@'],
 		input: sphinx_sources,
 		output: 'html',
-		build_by_default: true)
+		build_by_default: false)
   install_subdir(join_paths(meson.current_build_dir(), 'html'), install_dir: 'share/doc/knot-resolver/')
 endif
 
