@@ -578,9 +578,7 @@ endif
 kresd_run = find_program('tests/deckard/kresd_run.sh')
 
 if kresd_run.found()
-
-  custom_target('check-integration',
-		command: [kresd_run, meson.current_build_dir(), meson.current_source_dir()],
-		output: 'deckard.log',
-		build_by_default: false)
+  run_target('check-integration',
+	     command: [kresd_run, meson.current_build_dir(), meson.current_source_dir()],
+	     build_by_default: false)
 endif

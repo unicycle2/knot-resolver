@@ -43,7 +43,7 @@ script:
   - ./build/kresd -h
   - ./build/kresd -V
   - echo "quit()" | ./build/kresd -a 127.0.0.1#53535 .
-#    - CFLAGS="-O2 -g -fno-omit-frame-pointer -DDEBUG" make -j2 check-integration COVERAGE=1 PREFIX=${HOME}/.local DYLD_LIBRARY_PATH=${DYLD_LIBRARY_PATH}
+  - ninja -C build check-integration
 sudo: false
 cache:
   - pip
