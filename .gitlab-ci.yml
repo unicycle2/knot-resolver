@@ -40,12 +40,27 @@ deckard:linux:amd64:
     - amd64
 
 respdiff:linux:amd64:
-  image: cznic/ubuntu-respdif:16.04
   stage: test
+  before_script:
+    - pwd
+    - cp $(pwd)/respdiff/policy-rc.d /usr/sbin/policy-rc.d
+    - apt-get -qq update
+    - apt-get -yqq install unbound
+    - apt-get -yqq install bind9
+    - git clone --depth=1 -b master https://gitlab.labs.nic.cz/knot/resolver-benchmarking.git $(pwd)/resolver-benchmarking
+    - cp $(pwd)/respdiff/test.cfg $(pwd)/resolver-benchmarking/response_differences/config/
   script:
-    - LD_LIBRARY_PATH=$(pwd)/.local/lib /home/kresdbench/run.sh $(pwd)/.local/sbin/kresd
-    - /home/kresdbench/resolver-benchmarking/response_differences/nightly.sh
-    - cp -r /home/kresdbench/resolver-benchmarking/response_differences/results $(pwd)
+    - /usr/sbin/unbound -c $(pwd)/respdiff/unbound.conf
+    - pidof unbound
+    - /usr/sbin/named -n 1 -c $(pwd)/respdiff/named.conf
+    - pidof named
+    - LD_LIBRARY_PATH=$(pwd)/.local/lib nohup $(pwd)/.local/sbin/kresd -k /usr/share/root.key -f 1 -v --config $(pwd)/respdiff/kresd.conf $(pwd)/ &
+    - pidof kresd
+    - python2.7 $(pwd)/resolver-benchmarking/response_differences/respdif -c $(pwd)/respdiff/test.cfg -i $(pwd)/respdiff/datafile-100k --json -o -b ${CI_COMMIT_REF_NAME}
+    - $(pwd)/resolver-benchmarking/response_differences/nightly.sh
+    - cp -r $(pwd)/resolver-benchmarking/response_differences/results $(pwd)
+  dependencies:
+    - build:linux:amd64
   artifacts:
     when: always
     expire_in: '1 week'

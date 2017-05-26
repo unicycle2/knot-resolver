@@ -9,7 +9,14 @@
 *.Plo
 *.swp
 *~
-*.d
+/contrib/*.d
+/contrib/*/*.d
+/contrib/*/*/*.d
+/daemon/*.d
+/lib/*.d
+/lib/*/*.d
+/modules/*.d
+/modules/*/*.d
 *.db
 *.out
 *.6
