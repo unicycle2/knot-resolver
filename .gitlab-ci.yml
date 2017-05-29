@@ -4,10 +4,12 @@ variables:
   DEBIAN_FRONTEND: noninteractive
   LC_ALL: C.UTF-8
   PREFIX: $CI_PROJECT_DIR/.local
-  GIT_SUBMODULE_STRATEGY: recursive
   
 build:linux:amd64:
   stage: build
+  before_script:
+    - apt-get -qq update
+    - apt-get -yqq dist-upgrade
   script:
     - make -k all
     - make install
@@ -31,6 +33,12 @@ test:linux:amd64:
 
 deckard:linux:amd64:
   stage: test
+  before_script:
+    - apt-get -qq update
+    - apt-get -yqq dist-upgrade
+    - apt-get -yqq install ca-certificates
+    - git submodule sync --recursive
+    - git submodule update --init --recursive
   script:
     - MAKEFLAGS="--jobs $(nproc) --keep-going" make check-integration
   dependencies:
@@ -43,6 +51,11 @@ deckard:linux:amd64:
 respdiff:linux:amd64:
   stage: test
   before_script:
+    - apt-get -qq update
+    - apt-get -yqq dist-upgrade
+    - apt-get -yqq install ca-certificates
+    - git submodule sync --recursive
+    - git submodule update --init --recursive
     - cp $(pwd)/resolver-benchmarking/response_differences/misc/policy-rc.d /usr/sbin/policy-rc.d
     - apt-get -qq update
     - apt-get -yqq install unbound bind9 runit dnsutils
