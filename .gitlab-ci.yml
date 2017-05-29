@@ -104,6 +104,11 @@ respdiff:linux:amd64:
       - results/*.json
       - results/*.out
       - results/*.log
+  only:
+    - tags
+    - triggers
+    - respdiff
+    - respdiff-*
   tags:
     - linux
     - amd64
