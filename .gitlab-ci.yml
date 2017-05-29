@@ -6,7 +6,7 @@ variables:
   PREFIX: $CI_PROJECT_DIR/.local
   BASE_DEPS: build-essential bsdmainutils git ca-certificates dns-root-data
   SLIM_DEPS: libgnutls28-dev libjansson-dev libknot-dev liblmdb-dev libluajit-5.1-dev libuv1-dev luajit pkg-config
-  FULL_DEPS: python doxygen python-breathe python-sphinx lua-sec lua-socket lua-http lua-mmdb libedit-dev libfstrm-dev libprotobuf-c-dev protobuf-c-compiler libgeoip-dev libhiredis-dev libmemcached-dev libcmocka-dev libsystemd-dev
+  FULL_DEPS: python doxygen python-breathe python-sphinx lua-sec lua-socket lua-http lua-mmdb libedit-dev libfstrm-dev libprotobuf-c-dev protobuf-c-compiler libgeoip-dev libhiredis-dev libmemcached-dev libcmocka-dev libsystemd-dev python-dnspython python-yaml
   DECKARD_DEPS: cmake
   
 build:linux:amd64:
