@@ -3,12 +3,14 @@ image: cznic/ubuntu:16.04
 variables:
   DEBIAN_FRONTEND: noninteractive
   LC_ALL: C.UTF-8
+  PREFIX: $CI_PROJECT_DIR/.local
+  GIT_SUBMODULE_STRATEGY: recursive
   
 build:linux:amd64:
   stage: build
   script:
-    - PREFIX=$(pwd)/.local make -k all
-    - PREFIX=$(pwd)/.local make install
+    - make -k all
+    - make install
   artifacts:
     untracked: true
   tags:
@@ -19,7 +21,7 @@ build:linux:amd64:
 test:linux:amd64:
   stage: test
   script:
-    - PREFIX=$(pwd)/.local make -k check
+    - make -k check
   dependencies:
     - build:linux:amd64
   tags:
@@ -30,8 +32,7 @@ test:linux:amd64:
 deckard:linux:amd64:
   stage: test
   script:
-    - git submodule update --init --recursive
-    - PREFIX=$(pwd)/.local MAKEFLAGS="--jobs $(nproc) --keep-going" make check-integration
+    - MAKEFLAGS="--jobs $(nproc) --keep-going" make check-integration
   dependencies:
     - build:linux:amd64
   tags:
@@ -42,20 +43,17 @@ deckard:linux:amd64:
 respdiff:linux:amd64:
   stage: test
   before_script:
-    - pwd
     - cp $(pwd)/respdiff/policy-rc.d /usr/sbin/policy-rc.d
     - apt-get -qq update
-    - apt-get -yqq install unbound
-    - apt-get -yqq install bind9
-    - git clone --depth=1 -b master https://gitlab.labs.nic.cz/knot/resolver-benchmarking.git $(pwd)/resolver-benchmarking
-    - cp $(pwd)/respdiff/test.cfg $(pwd)/resolver-benchmarking/response_differences/config/
+    - apt-get -yqq install unbound bind9 runit dnsutils
+    - echo "# configuration for GitLab CI .local builds" > /etc/ld.so.conf.d/local.conf
+    - echo "$CI_PROJECT_DIR/.local/lib" >> /etc/ld.so.conf.d/local.conf
+    - echo "$CI_PROJECT_DIR/.local/lib/$(dpkg-architecture -qDEB_HOST_MULTIARCH)" >> /etc/ld.so.conf.d/local.conf
+    - ldconfig
   script:
-    - /usr/sbin/unbound -c $(pwd)/respdiff/unbound.conf
-    - pidof unbound
-    - /usr/sbin/named -n 1 -c $(pwd)/respdiff/named.conf
-    - pidof named
-    - LD_LIBRARY_PATH=$(pwd)/.local/lib nohup $(pwd)/.local/sbin/kresd -k /usr/share/root.key -f 1 -v --config $(pwd)/respdiff/kresd.conf $(pwd)/ &
-    - pidof kresd
+    - respdiff/service/run $CI_PROJECT_DIR/respdiff/service 3 # time in seconds for servers to settle in
+    - sv status $CI_PROJECT_DIR/respdiff/service/unbound $CI_PROJECT_DIR/respdiff/service/named $CI_PROJECT_DIR/respdiff/service/kresd
+    - tail $CI_PROJECT_DIR/respdiff/service/unbound/log/current $CI_PROJECT_DIR/respdiff/service/named/log/current $CI_PROJECT_DIR/respdiff/service/kresd/log/current
     - python2.7 $(pwd)/resolver-benchmarking/response_differences/respdif -c $(pwd)/respdiff/test.cfg -i $(pwd)/respdiff/datafile-100k --json -o -b ${CI_COMMIT_REF_NAME}
     - $(pwd)/resolver-benchmarking/response_differences/nightly.sh
     - cp -r $(pwd)/resolver-benchmarking/response_differences/results $(pwd)

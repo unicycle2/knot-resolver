@@ -1,3 +1,6 @@
 [submodule "tests/deckard"]
 	path = tests/deckard
 	url = https://gitlab.labs.nic.cz/knot/deckard.git
+[submodule "resolver-benchmarking"]
+	path = resolver-benchmarking
+	url = https://gitlab.labs.nic.cz/knot/resolver-benchmarking.git
