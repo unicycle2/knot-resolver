@@ -4,6 +4,10 @@ variables:
   DEBIAN_FRONTEND: noninteractive
   LC_ALL: C.UTF-8
   PREFIX: $CI_PROJECT_DIR/.local
+  BASE_DEPS: build-essential bsdmainutils git ca-certificates dns-root-data
+  SLIM_DEPS: libgnutls28-dev libjansson-dev libknot-dev liblmdb-dev libluajit-5.1-dev libuv1-dev luajit pkg-config
+  FULL_DEPS: python doxygen python-breathe python-sphinx lua-sec lua-socket lua-http lua-mmdb libedit-dev libfstrm-dev libprotobuf-c-dev protobuf-c-compiler libgeoip-dev libhiredis-dev libmemcached-dev libcmocka-dev libsystemd-dev
+  DECKARD_DEPS: cmake
   
 build:linux:amd64:
   stage: build
@@ -11,11 +15,25 @@ build:linux:amd64:
     - sed -i 's/deb\.debian\.org/ftp.cz.debian.org/g' /etc/apt/sources.list
     - apt-get -qq update
     - apt-get -qq dist-upgrade
-    - apt-get -qq install build-essential bsdmainutils git
-    - apt-get -qq install libcmocka-dev libgeoip-dev libgnutls28-dev libhiredis-dev libjansson-dev libknot-dev liblmdb-dev libluajit-5.1-dev libmemcached-dev libsystemd-dev libuv1-dev luajit pkg-config python doxygen python-breathe python-sphinx
+    - apt-get -qq install $BASE_DEPS $SLIM_DEPS
   script:
     - make -k all
     - make install
+  artifacts:
+    untracked: true
+  tags:
+    - linux
+    - amd64
+
+build-full:linux:amd64:
+  stage: build
+  before_script:
+    - sed -i 's/deb\.debian\.org/ftp.cz.debian.org/g' /etc/apt/sources.list
+    - apt-get -qq update
+    - apt-get -qq dist-upgrade
+    - apt-get -qq install $BASE_DEPS $SLIM_DEPS $FULL_DEPS
+  script:
+    - make -k all
   artifacts:
     untracked: true
   tags:
@@ -28,12 +46,11 @@ test:linux:amd64:
     - sed -i 's/deb\.debian\.org/ftp.cz.debian.org/g' /etc/apt/sources.list
     - apt-get -qq update
     - apt-get -qq dist-upgrade
-    - apt-get -qq install build-essential bsdmainutils git
-    - apt-get -qq install libcmocka-dev libgeoip-dev libgnutls28-dev libhiredis-dev libjansson-dev libknot-dev liblmdb-dev libluajit-5.1-dev libmemcached-dev libsystemd-dev libuv1-dev luajit pkg-config python doxygen python-breathe python-sphinx
+    - apt-get -qq install $BASE_DEPS $SLIM_DEPS $FULL_DEPS
   script:
     - make -k check
   dependencies:
-    - build:linux:amd64
+    - build-full:linux:amd64
   tags:
     - linux
     - amd64
@@ -44,10 +61,7 @@ deckard:linux:amd64:
     - sed -i 's/deb\.debian\.org/ftp.cz.debian.org/g' /etc/apt/sources.list
     - apt-get -qq update
     - apt-get -qq dist-upgrade
-    - apt-get -qq install build-essential bsdmainutils git
-    - apt-get -qq install libcmocka-dev libgeoip-dev libgnutls28-dev libhiredis-dev libjansson-dev libknot-dev liblmdb-dev libluajit-5.1-dev libmemcached-dev libsystemd-dev libuv1-dev luajit pkg-config python doxygen python-breathe python-sphinx
-    - apt-get -qq install cmake 
-    - apt-get -qq install ca-certificates
+    - apt-get -qq install $BASE_DEPS $SLIM_DEPS $FULL_DEPS $DECKARD_DEPS
     - git submodule sync --recursive
     - git submodule update --init --recursive
   script:
@@ -64,11 +78,7 @@ respdiff:linux:amd64:
     - sed -i 's/deb\.debian\.org/ftp.cz.debian.org/g' /etc/apt/sources.list
     - apt-get -qq update
     - apt-get -qq dist-upgrade
-    - apt-get -qq install build-essential bsdmainutils git
-    - apt-get -qq install libcmocka-dev libgeoip-dev libgnutls28-dev libhiredis-dev libjansson-dev libknot-dev liblmdb-dev libluajit-5.1-dev libmemcached-dev libsystemd-dev libuv1-dev luajit pkg-config python doxygen python-breathe python-sphinx
-    - apt-get -qq install dns-root-data
-    - apt-get -qq install ca-certificates
-    - apt-get -qq install dns-root-data
+    - apt-get -qq install $BASE_DEPS $SLIM_DEPS $FULL_DEPS $DECKARD_DEPS
     - git submodule sync --recursive
     - git submodule update --init --recursive
     - cp $(pwd)/resolver-benchmarking/response_differences/misc/policy-rc.d /usr/sbin/policy-rc.d
