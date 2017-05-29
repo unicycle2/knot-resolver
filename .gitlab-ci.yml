@@ -1,4 +1,4 @@
-image: cznic/ubuntu:16.04
+image: debian:stretch-slim
 
 variables:
   DEBIAN_FRONTEND: noninteractive
@@ -8,35 +8,46 @@ variables:
 build:linux:amd64:
   stage: build
   before_script:
+    - sed -i 's/deb\.debian\.org/ftp.cz.debian.org/g' /etc/apt/sources.list
     - apt-get -qq update
-    - apt-get -yqq dist-upgrade
+    - apt-get -qq dist-upgrade
+    - apt-get -qq install build-essential bsdmainutils git
+    - apt-get -qq install libcmocka-dev libgeoip-dev libgnutls28-dev libhiredis-dev libjansson-dev libknot-dev liblmdb-dev libluajit-5.1-dev libmemcached-dev libsystemd-dev libuv1-dev luajit pkg-config python doxygen python-breathe python-sphinx
   script:
     - make -k all
     - make install
   artifacts:
     untracked: true
   tags:
-    - docker
     - linux
     - amd64
 
 test:linux:amd64:
   stage: test
+  before_script:
+    - sed -i 's/deb\.debian\.org/ftp.cz.debian.org/g' /etc/apt/sources.list
+    - apt-get -qq update
+    - apt-get -qq dist-upgrade
+    - apt-get -qq install build-essential bsdmainutils git
+    - apt-get -qq install libcmocka-dev libgeoip-dev libgnutls28-dev libhiredis-dev libjansson-dev libknot-dev liblmdb-dev libluajit-5.1-dev libmemcached-dev libsystemd-dev libuv1-dev luajit pkg-config python doxygen python-breathe python-sphinx
   script:
     - make -k check
   dependencies:
     - build:linux:amd64
   tags:
-    - docker
     - linux
     - amd64
 
 deckard:linux:amd64:
   stage: test
   before_script:
+    - sed -i 's/deb\.debian\.org/ftp.cz.debian.org/g' /etc/apt/sources.list
     - apt-get -qq update
-    - apt-get -yqq dist-upgrade
-    - apt-get -yqq install ca-certificates
+    - apt-get -qq dist-upgrade
+    - apt-get -qq install build-essential bsdmainutils git
+    - apt-get -qq install libcmocka-dev libgeoip-dev libgnutls28-dev libhiredis-dev libjansson-dev libknot-dev liblmdb-dev libluajit-5.1-dev libmemcached-dev libsystemd-dev libuv1-dev luajit pkg-config python doxygen python-breathe python-sphinx
+    - apt-get -qq install cmake 
+    - apt-get -qq install ca-certificates
     - git submodule sync --recursive
     - git submodule update --init --recursive
   script:
@@ -44,21 +55,25 @@ deckard:linux:amd64:
   dependencies:
     - build:linux:amd64
   tags:
-    - docker
     - linux
     - amd64
 
 respdiff:linux:amd64:
   stage: test
   before_script:
+    - sed -i 's/deb\.debian\.org/ftp.cz.debian.org/g' /etc/apt/sources.list
     - apt-get -qq update
-    - apt-get -yqq dist-upgrade
-    - apt-get -yqq install ca-certificates
+    - apt-get -qq dist-upgrade
+    - apt-get -qq install build-essential bsdmainutils git
+    - apt-get -qq install libcmocka-dev libgeoip-dev libgnutls28-dev libhiredis-dev libjansson-dev libknot-dev liblmdb-dev libluajit-5.1-dev libmemcached-dev libsystemd-dev libuv1-dev luajit pkg-config python doxygen python-breathe python-sphinx
+    - apt-get -qq install dns-root-data
+    - apt-get -qq install ca-certificates
+    - apt-get -qq install dns-root-data
     - git submodule sync --recursive
     - git submodule update --init --recursive
     - cp $(pwd)/resolver-benchmarking/response_differences/misc/policy-rc.d /usr/sbin/policy-rc.d
     - apt-get -qq update
-    - apt-get -yqq install unbound bind9 runit dnsutils
+    - apt-get -qq install unbound bind9 runit dnsutils
     - echo "# configuration for GitLab CI .local builds" > /etc/ld.so.conf.d/local.conf
     - echo "$CI_PROJECT_DIR/.local/lib" >> /etc/ld.so.conf.d/local.conf
     - echo "$CI_PROJECT_DIR/.local/lib/$(dpkg-architecture -qDEB_HOST_MULTIARCH)" >> /etc/ld.so.conf.d/local.conf
@@ -80,7 +95,6 @@ respdiff:linux:amd64:
       - results/*.out
       - results/*.log
   tags:
-    - docker
     - linux
     - amd64
   allow_failure: true
