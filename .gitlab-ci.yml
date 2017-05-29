@@ -104,6 +104,7 @@ respdiff:linux:amd64:
       - results/*.json
       - results/*.out
       - results/*.log
+      - resolver-benchmarking/response_differences/service/*/log/@*
   only:
     - tags
     - triggers
