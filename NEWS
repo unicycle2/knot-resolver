@@ -18,6 +18,10 @@ Improvements
 - modules: allow changing the directory where modules are found,
   and do not search the default library path anymore.
 
+Bugfixes
+--------
+- avoid putting "duplicate" record-sets into the answer (#198)
+
 
 Knot Resolver 1.2.6 (2017-04-24)
 ================================
