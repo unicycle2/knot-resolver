@@ -468,11 +468,7 @@ int kr_rrarray_add(rr_array_t *array, const knot_rrset_t *rr, knot_mm_t *pool)
 	return kr_ok();
 }
 
-/** Return whether two RRsets match, i.e. would form the same set.
- *
- * Note: RRSIGs are only considered to form an RRset when the types covered match;
- * cache-related code relies on that!
- */
+/** Return whether two RRsets match, i.e. would form the same set; see ranked_rr_array_t */
 static inline bool rrsets_match(const knot_rrset_t *rr1, const knot_rrset_t *rr2)
 {
 	bool match = rr1->type == rr2->type && rr1->rclass == rr2->rclass;
