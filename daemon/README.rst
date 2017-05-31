@@ -380,7 +380,15 @@ Environment
    hostname. If called without a parameter, it will return kresd's
    internal hostname, or the system's POSIX hostname (see
    gethostname(2)) if kresd's internal hostname is unset.
-	    
+
+.. function:: moduledir([dir])
+
+   :return: Modules directory.
+
+   If called with a parameter, it will change kresd's directory for
+   looking up the dynamic modules.  If called without a parameter, it
+   will return kresd's modules directory.
+   
 .. function:: verbose(true | false)
 
    :return: Toggle verbose logging.
@@ -604,10 +612,13 @@ For when listening on ``localhost`` just doesn't cut it.
 
 .. function:: net.tls_padding([padding])
 
-   Get/set EDNS(0) padding.  If set to value >= 2 it will pad the answers
-   to nearest *padding* boundary, e.g. if set to `64`, the answer will
-   have size of multiplies of 64 (64, 128, 192, ...).  Setting padding to
-   value < 2 will disable it.
+   Get/set EDNS(0) padding of answers to queries that arrive over TLS
+   transport.  If set to `true` (the default), it will use a sensible
+   default padding scheme, as implemented by libknot if available at
+   compile time.  If set to a numeric value >= 2 it will pad the
+   answers to nearest *padding* boundary, e.g. if set to `64`, the
+   answer will have size of a multiple of 64 (64, 128, 192, ...).  If
+   set to `false` (or a number < 2), it will disable padding entirely.
 
 .. function:: net.outgoing_v4([string address])
 
