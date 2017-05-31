@@ -476,7 +476,7 @@ int kr_rrarray_add(rr_array_t *array, const knot_rrset_t *rr, knot_mm_t *pool)
 static inline bool rrsets_match(const knot_rrset_t *rr1, const knot_rrset_t *rr2)
 {
 	bool match = rr1->type == rr2->type && rr1->rclass == rr2->rclass;
-	if (rr2->type == KNOT_RRTYPE_RRSIG) {
+	if (match && rr2->type == KNOT_RRTYPE_RRSIG) {
 		match = match && knot_rrsig_type_covered(&rr1->rrs, 0)
 				  == knot_rrsig_type_covered(&rr2->rrs, 0);
 	}
