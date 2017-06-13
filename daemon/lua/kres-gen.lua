@@ -200,6 +200,7 @@ int kr_bitcmp(const char *, const char *, int);
 int kr_family_len(int);
 struct sockaddr *kr_straddr_socket(const char *, int);
 int kr_rrarray_add(rr_array_t *, const knot_rrset_t *, knot_mm_t *);
+int kr_ranked_rrarray_add(ranked_rr_array_t *, const knot_rrset_t *, uint8_t, _Bool, uint32_t, knot_mm_t *);
 knot_rrset_t *kr_ta_get(map_t *, const knot_dname_t *);
 int kr_ta_add(map_t *, const knot_dname_t *, uint16_t, uint32_t, const uint8_t *, uint16_t);
 int kr_ta_del(map_t *, const knot_dname_t *);

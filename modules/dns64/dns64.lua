@@ -28,9 +28,7 @@ mod.layer = {
 				local rr = answer[i]
 				-- Synthesise AAAA from A
 				if rr.type == kres.type.A then
-					ffi.copy(addr_buf, mod.proxy, 16)
-					ffi.copy(addr_buf + 12, rr.rdata, 4)
-					req.answer:put(rr.owner, rr.ttl, rr.class, kres.type.AAAA, ffi.string(addr_buf, 16))
+					ffi.C.ranked_rrarray_add(req.answ_selected, ) --FIXME
 				end
 			end
 		else -- Observe AAAA NODATA responses

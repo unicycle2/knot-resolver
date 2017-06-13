@@ -117,6 +117,7 @@ EOF
 	kr_family_len
 	kr_straddr_socket
 	kr_rrarray_add
+	kr_ranked_rrarray_add
 # Trust anchors
 	kr_ta_get
 	kr_ta_add
