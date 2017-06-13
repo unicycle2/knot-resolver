@@ -92,6 +92,9 @@ respdiff:linux:amd64:
     - resolver-benchmarking/response_differences/service/run $CI_PROJECT_DIR/resolver-benchmarking/response_differences/service 3 # time in seconds for servers to settle in
     - sv status $CI_PROJECT_DIR/resolver-benchmarking/response_differences/service/unbound $CI_PROJECT_DIR/resolver-benchmarking/response_differences/service/named $CI_PROJECT_DIR/resolver-benchmarking/response_differences/service/kresd
     - tail $CI_PROJECT_DIR/resolver-benchmarking/response_differences/service/unbound/log/current $CI_PROJECT_DIR/resolver-benchmarking/response_differences/service/named/log/current $CI_PROJECT_DIR/resolver-benchmarking/response_differences/service/kresd/log/current
+    - echo "UNBOUND" && dig +retry=1 +time=5 IN DNSKEY . -p 50001 @127.0.0.1
+    - echo "BIND"    && dig +retry=1 +time=5 IN DNSKEY . -p 50002 @127.0.0.1
+    - echo "KRESD"   && dig +retry=1 +time=5 IN DNSKEY . -p 50003 @127.0.0.1
     - python2.7 $(pwd)/resolver-benchmarking/response_differences/respdif -c $CI_PROJECT_DIR/resolver-benchmarking/response_differences/config/test.cfg -i $CI_PROJECT_DIR/resolver-benchmarking/response_differences/data/datafile-100k --json -o -b ${CI_COMMIT_REF_NAME}
     - $(pwd)/resolver-benchmarking/response_differences/nightly.sh
     - cp -r $(pwd)/resolver-benchmarking/response_differences/results $(pwd)
